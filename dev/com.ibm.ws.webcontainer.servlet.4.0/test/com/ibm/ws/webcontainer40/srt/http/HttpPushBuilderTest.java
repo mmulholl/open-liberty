@@ -31,6 +31,7 @@ import org.junit.Test;
 
 import com.ibm.websphere.servlet40.IRequest40;
 import com.ibm.ws.webcontainer40.srt.SRTServletRequest40;
+import com.ibm.wsspi.genericbnf.HeaderField;
 import com.ibm.wsspi.http.HttpCookie;
 import com.ibm.wsspi.http.HttpRequest;
 
@@ -170,8 +171,7 @@ public class HttpPushBuilderTest {
 
         assertTrue(pb.getPath() == null);
         assertTrue(pb.getQueryString() == null);
-        assertTrue(pb.getHeader("Referer").equals("/UnitTest/TestAPI_path?test=queryStringFromRequest"));
-
+        assertTrue("Referer header = " + pb.getHeader("Referer"),pb.getHeader("Referer").equals("/UnitTest/TestAPI_path?test=queryStringFromRequest"));
     }
 
     @Test
@@ -234,9 +234,28 @@ public class HttpPushBuilderTest {
         pb.addHeader("testAddHeader", "testAddValue2");
         pb.setHeader("testSetHeader", "testSetValue1");
         pb.setHeader("testSetHeader", "testSetValue2");
+        
+        Set<HeaderField> hdrs = pb.getHeaders();
 
-        assertTrue(pb.getHeaders().size() == 2);
         assertTrue(pb.getHeaderNames().size() == 2);
+        
+        int numAddHeader=0,numSetHeader=0;
+        Iterator<HeaderField> hdrsIterator = hdrs.iterator();
+        while (hdrsIterator.hasNext()) {
+            HeaderField hdr = hdrsIterator.next();
+            if (hdr.getName().equals("testAddHeader")) {
+                numAddHeader++;
+                assertTrue(hdr.asString().equals("testAddValue"+numAddHeader));
+            } else {
+                numSetHeader++;
+                assertTrue(hdr.getName().equals("testSetHeader"));
+                assertTrue(hdr.asString().equals("testSetValue2"));                              
+            }
+        }
+        
+        assertTrue(numAddHeader==2);
+        assertTrue(numSetHeader==1);
+        
 
     }
 
